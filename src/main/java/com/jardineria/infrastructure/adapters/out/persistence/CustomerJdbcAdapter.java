@@ -14,8 +14,37 @@ import java.util.Optional;
 
 public class CustomerJdbcAdapter implements CustomerRepository {
 
+    /**
+     * Obtiene el siguiente código secuencial disponible para cliente.
+     * Si la tabla está vacía, devuelve 1; de lo contrario, devuelve MAX + 1.
+     */
+    private int getNextCustomerCode() {
+        String sql = "SELECT MAX(codigo_cliente) FROM cliente";
+
+        try (Connection connection = ConexionMySQL.conectar()) {
+            if (connection == null) {
+                throw new RuntimeException("Error en base de datos: No se pudo establecer la conexión con MySQL.");
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(sql);
+                 ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    int maxCode = resultSet.getInt(1);
+                    return resultSet.wasNull() || maxCode == 0 ? 1 : maxCode + 1;
+                }
+                return 1;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en base de datos al generar código de cliente: " + e.getMessage(), e);
+        }
+    }
+
     @Override
     public void save(Customer customer) {
+        // Asignar automáticamente el siguiente código secuencial
+        int nextCode = getNextCustomerCode();
+        customer.setCustomerCode(nextCode);
+
         String sql = "INSERT INTO cliente (codigo_cliente, nombre_cliente, nombre_contacto, apellido_contacto, " +
                      "telefono, fax, linea_direccion1, ciudad, pais, codigo_empleado_rep_ventas, limite_credito) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";

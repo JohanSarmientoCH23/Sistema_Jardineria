@@ -20,13 +20,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -39,21 +44,27 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class CustomerView extends JPanel {
 
-    // Corporate Palette
-    private static final Color BG_CANVAS = new Color(245, 246, 248);
+    // Paleta corporativa moderna sincronizada con el Dashboard
+    private static final Color BG_CANVAS = new Color(245, 247, 250);
     private static final Color CARD_BG = Color.WHITE;
     private static final Color CARD_BORDER = new Color(226, 232, 240);
-    private static final Color NAVY_PRIMARY = new Color(24, 38, 57);
     private static final Color TEXT_PRIMARY = new Color(24, 38, 57);
     private static final Color TEXT_SECONDARY = new Color(100, 116, 139);
+    private static final Color COLOR_PRIMARY_GREEN = new Color(40, 167, 69);
+    private static final Color COLOR_DANGER = new Color(220, 38, 38);
+    private static final Color BORDER_SUBTLE = new Color(209, 213, 219);
 
     private final CustomerUseCase customerUseCase = new CustomerUseCase(new CustomerJdbcAdapter());
     private final EmployeeUseCase employeeUseCase = new EmployeeUseCase(new EmployeeJdbcAdapter());
+
     private DefaultTableModel tableModel;
     private JTable customerTable;
+    private TableRowSorter<DefaultTableModel> rowSorter;
+    private JTextField txtSearch;
 
     public CustomerView() {
         initComponents();
@@ -61,88 +72,156 @@ public class CustomerView extends JPanel {
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout(0, 16));
+        setLayout(new BorderLayout(0, 18));
         setBackground(BG_CANVAS);
-        setBorder(new EmptyBorder(25, 30, 25, 30));
+        setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
 
-        // 1. Top Header & Toolbar
+        // 1. Panel Superior: Encabezados y Barra de Acciones (Búsqueda + CRUD)
         JPanel topPanel = createTopPanel();
         add(topPanel, BorderLayout.NORTH);
 
-        // 2. Center Table Card Container
+        // 2. Panel Central: Tarjeta contenedora con JTable estilizado
         JPanel tableCard = createTableCard();
         add(tableCard, BorderLayout.CENTER);
     }
 
     private JPanel createTopPanel() {
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setOpaque(false);
+        JPanel container = new JPanel(new BorderLayout(0, 14));
+        container.setOpaque(false);
 
-        // Titles
-        JPanel titleBox = new JPanel();
-        titleBox.setLayout(new BoxLayout(titleBox, BoxLayout.Y_AXIS));
-        titleBox.setOpaque(false);
+        // Títulos
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setOpaque(false);
 
-        JLabel titleLabel = new JLabel("Customers Management");
+        JLabel titleLabel = new JLabel("Customer Management");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(TEXT_PRIMARY);
 
-        JLabel subtitleLabel = new JLabel("Enterprise client accounts, contacts, regional locations & credit lines");
+        JLabel subtitleLabel = new JLabel("Real-time list of clients, contacts & credit limits");
         subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         subtitleLabel.setForeground(TEXT_SECONDARY);
 
-        titleBox.add(titleLabel);
-        titleBox.add(Box.createRigidArea(new Dimension(0, 3)));
-        titleBox.add(subtitleLabel);
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        titlePanel.add(subtitleLabel);
 
-        // Action Buttons Toolbar
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        container.add(titlePanel, BorderLayout.NORTH);
+
+        // Barra de Herramientas
+        JPanel toolbarPanel = new JPanel(new BorderLayout(15, 0));
+        toolbarPanel.setOpaque(false);
+
+        // Izquierda: Campo de Búsqueda Dinámica con filtro en tiempo real
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        searchPanel.setOpaque(false);
+
+        txtSearch = new JTextField(24);
+        txtSearch.setPreferredSize(new Dimension(280, 36));
+        txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtSearch.putClientProperty("JTextField.placeholderText", "Search by code, name, or city...");
+        txtSearch.putClientProperty("JTextField.showClearButton", true);
+        txtSearch.putClientProperty("Component.arc", 8);
+
+        // Filtrado reactivo en tiempo real mientras el usuario escribe
+        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            private void applyFilter() {
+                if (rowSorter == null) return;
+                String query = txtSearch.getText().trim();
+                if (query.isEmpty()) {
+                    rowSorter.setRowFilter(null);
+                } else {
+                    rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(query)));
+                }
+            }
+        });
+
+        JButton btnFilter = new JButton("Filter");
+        btnFilter.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btnFilter.setPreferredSize(new Dimension(75, 36));
+        btnFilter.setBackground(CARD_BG);
+        btnFilter.setForeground(TEXT_PRIMARY);
+        btnFilter.setFocusPainted(false);
+        btnFilter.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnFilter.putClientProperty("JButton.buttonType", "roundRect");
+        btnFilter.setBorder(BorderFactory.createLineBorder(BORDER_SUBTLE, 1, true));
+        btnFilter.addActionListener(e -> txtSearch.requestFocusInWindow());
+
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnFilter);
+
+        // Derecha: Botones Modernos CRUD
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
 
-        JButton btnAdd = createStyledButton("Add Customer", NAVY_PRIMARY, Color.WHITE, true);
-        JButton btnEdit = createStyledButton("Edit", CARD_BG, TEXT_PRIMARY, false);
-        JButton btnDelete = createStyledButton("Delete", CARD_BG, new Color(220, 38, 38), false);
-        JButton btnRefresh = createStyledButton("Refresh", CARD_BG, TEXT_PRIMARY, false);
+        JButton btnAdd = createActionButton("+ Add Customer", COLOR_PRIMARY_GREEN, Color.WHITE, true, 135);
+        JButton btnEdit = createActionButton("Edit", CARD_BG, TEXT_PRIMARY, false, 80);
+        JButton btnDelete = createActionButton("Delete", CARD_BG, COLOR_DANGER, false, 85);
+        JButton btnRefresh = createActionButton("Refresh", CARD_BG, TEXT_PRIMARY, false, 90);
 
         btnAdd.addActionListener(e -> showCustomerDialog(null));
         btnEdit.addActionListener(e -> handleEdit());
         btnDelete.addActionListener(e -> handleDelete());
-        btnRefresh.addActionListener(e -> loadData());
+        btnRefresh.addActionListener(e -> {
+            txtSearch.setText("");
+            loadData();
+        });
 
-        buttonPanel.add(btnRefresh);
-        buttonPanel.add(btnDelete);
-        buttonPanel.add(btnEdit);
         buttonPanel.add(btnAdd);
+        buttonPanel.add(btnEdit);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnRefresh);
 
-        topPanel.add(titleBox, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
+        toolbarPanel.add(searchPanel, BorderLayout.WEST);
+        toolbarPanel.add(buttonPanel, BorderLayout.EAST);
 
-        return topPanel;
+        container.add(toolbarPanel, BorderLayout.SOUTH);
+        return container;
     }
 
-    private JButton createStyledButton(String text, Color bg, Color fg, boolean isPrimary) {
+    private JButton createActionButton(String text, Color bg, Color fg, boolean isPrimary, int width) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", isPrimary ? Font.BOLD : Font.PLAIN, 12));
+        btn.setFont(new Font("Segoe UI", isPrimary ? Font.BOLD : Font.PLAIN, 13));
         btn.setBackground(bg);
         btn.setForeground(fg);
         btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(isPrimary ? 120 : 85, 34));
+        btn.setPreferredSize(new Dimension(width, 36));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.putClientProperty("JButton.buttonType", "roundRect");
 
-        if (!isPrimary) {
-            btn.setBorder(BorderFactory.createLineBorder(new Color(203, 213, 225), 1, true));
+        if (isPrimary) {
+            btn.setBorder(BorderFactory.createEmptyBorder(0, 14, 0, 14));
         } else {
-            btn.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+            btn.setBorder(BorderFactory.createLineBorder(BORDER_SUBTLE, 1, true));
         }
 
         return btn;
     }
 
     private JPanel createTableCard() {
-        RoundedPanel card = new RoundedPanel(14);
+        RoundedCardPanel card = new RoundedCardPanel(12);
         card.setLayout(new BorderLayout());
-        card.setBorder(new EmptyBorder(8, 8, 8, 8));
+        card.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
-        String[] columns = {"Code", "Company Name", "Contact Person", "Phone", "City", "Country", "Credit Limit"};
+        // Color alterno en filas mediante FlatLaf
+        UIManager.put("Table.alternateRowColor", new Color(245, 248, 250));
+
+        String[] columns = {"Code", "Name", "Contact", "Phone", "City", "Country", "Credit Limit"};
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -153,18 +232,41 @@ public class CustomerView extends JPanel {
 
         customerTable = new JTable(tableModel);
         customerTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        customerTable.setRowHeight(35);
+        customerTable.setRowHeight(35); // Altura generosa para legibilidad
         customerTable.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        customerTable.setAutoCreateRowSorter(true);
+        customerTable.setShowVerticalLines(false); // Sin líneas verticales
         customerTable.setShowHorizontalLines(true);
-        customerTable.setShowVerticalLines(false);
-        customerTable.setGridColor(new Color(241, 245, 249));
+        customerTable.setGridColor(new Color(238, 242, 246));
 
-        // Format Credit Limit column as a green badge
+        // Encabezado en negrita y sin reordenamiento
+        customerTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        customerTable.getTableHeader().setReorderingAllowed(false);
+        customerTable.getTableHeader().setPreferredSize(new Dimension(0, 38));
+
+        // TableRowSorter para ordenamiento y filtrado reactivo
+        rowSorter = new TableRowSorter<>(tableModel);
+        customerTable.setRowSorter(rowSorter);
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        customerTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        customerTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+
+        customerTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        customerTable.getColumnModel().getColumn(2).setPreferredWidth(160);
+        customerTable.getColumnModel().getColumn(3).setPreferredWidth(120);
+        customerTable.getColumnModel().getColumn(4).setPreferredWidth(120);
+        customerTable.getColumnModel().getColumn(5).setPreferredWidth(90);
+        customerTable.getColumnModel().getColumn(6).setPreferredWidth(130);
+
+        // Resaltado de Credit Limit en verde con alineación derecha
         customerTable.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(JLabel.RIGHT);
+                setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 14));
                 if (!isSelected) {
                     setForeground(new Color(22, 101, 52));
                     setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -196,7 +298,7 @@ public class CustomerView extends JPanel {
                         c.getPhone(),
                         c.getCity(),
                         c.getCountry(),
-                        c.getCreditLimit() != null ? String.format("$%.2f", c.getCreditLimit()) : "$0.00"
+                        c.getCreditLimit() != null ? String.format("$%,.2f", c.getCreditLimit()) : "$0.00"
                 });
             }
         } catch (Exception ex) {
@@ -213,6 +315,7 @@ public class CustomerView extends JPanel {
             return;
         }
 
+        // Conversión de índice de vista a modelo para compatibilidad con filtros activos
         int modelRow = customerTable.convertRowIndexToModel(selectedRow);
         Integer customerCode = (Integer) tableModel.getValueAt(modelRow, 0);
 
@@ -266,7 +369,7 @@ public class CustomerView extends JPanel {
     }
 
     // ==========================================
-    // Corporate Modal Form Dialog (Add / Edit)
+    // Diálogo Modal Corporativo (Add / Edit)
     // ==========================================
     private class CustomerFormDialog extends JDialog {
         private final Customer customerToEdit;
@@ -291,21 +394,21 @@ public class CustomerView extends JPanel {
         }
 
         private void initDialog() {
-            setSize(530, 580);
+            setSize(540, 600);
             setLocationRelativeTo(getOwner());
             setResizable(false);
             setLayout(new BorderLayout());
 
-            // Header Banner
+            // Banner superior del diálogo
             JPanel headerBanner = new JPanel(new BorderLayout());
-            headerBanner.setBackground(NAVY_PRIMARY);
-            headerBanner.setBorder(new EmptyBorder(16, 24, 16, 24));
+            headerBanner.setBackground(new Color(24, 38, 57));
+            headerBanner.setBorder(BorderFactory.createEmptyBorder(18, 25, 18, 25));
 
             JLabel title = new JLabel(customerToEdit == null ? "Add New Customer Account" : "Update Customer Record");
-            title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            title.setFont(new Font("Segoe UI", Font.BOLD, 17));
             title.setForeground(Color.WHITE);
 
-            JLabel subtitle = new JLabel(customerToEdit == null ? "Fill in the required enterprise client details" : "Modify existing client parameters and credit threshold");
+            JLabel subtitle = new JLabel(customerToEdit == null ? "Client ID is auto-generated. Fill in company details & credit limit" : "Modify existing client parameters and address lines");
             subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             subtitle.setForeground(new Color(203, 213, 225));
 
@@ -313,10 +416,10 @@ public class CustomerView extends JPanel {
             headerBanner.add(subtitle, BorderLayout.SOUTH);
             add(headerBanner, BorderLayout.NORTH);
 
-            // Form Body
+            // Formulario
             JPanel formPanel = new JPanel(new GridBagLayout());
             formPanel.setBackground(Color.WHITE);
-            formPanel.setBorder(new EmptyBorder(18, 25, 12, 25));
+            formPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 15, 25));
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(5, 6, 5, 6);
             gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -332,26 +435,18 @@ public class CustomerView extends JPanel {
             txtCountry = createStyledTextField();
             cmbSalesRep = new JComboBox<>();
             cmbSalesRep.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            cmbSalesRep.putClientProperty("Component.arc", 8);
             loadSalesReps();
             txtCreditLimit = createStyledTextField();
             txtCreditLimit.setText("0.00");
 
-            int row = 0;
-            addFormField(formPanel, gbc, "Customer Code *:", txtCode, row++);
-            addFormField(formPanel, gbc, "Company Name *:", txtName, row++);
-            addFormField(formPanel, gbc, "Contact First Name:", txtContactName, row++);
-            addFormField(formPanel, gbc, "Contact Last Name:", txtContactLastName, row++);
-            addFormField(formPanel, gbc, "Phone *:", txtPhone, row++);
-            addFormField(formPanel, gbc, "Fax:", txtFax, row++);
-            addFormField(formPanel, gbc, "Address Line *:", txtAddressLine1, row++);
-            addFormField(formPanel, gbc, "City *:", txtCity, row++);
-            addFormField(formPanel, gbc, "Country *:", txtCountry, row++);
-            addFormCombo(formPanel, gbc, "Sales Rep:", cmbSalesRep, row++);
-            addFormField(formPanel, gbc, "Credit Limit ($):", txtCreditLimit, row++);
-
-            if (customerToEdit != null) {
+            // Configuración del campo de código: siempre bloqueado; "Auto-generated" al agregar o el número al editar
+            txtCode.setEnabled(false);
+            if (customerToEdit == null) {
+                txtCode.setText("Auto-generated");
+                txtCode.setForeground(new Color(100, 116, 139));
+            } else {
                 txtCode.setText(String.valueOf(customerToEdit.getCustomerCode()));
-                txtCode.setEnabled(false);
                 txtName.setText(customerToEdit.getCustomerName());
                 txtContactName.setText(customerToEdit.getContactName() != null ? customerToEdit.getContactName() : "");
                 txtContactLastName.setText(customerToEdit.getContactLastName() != null ? customerToEdit.getContactLastName() : "");
@@ -375,27 +470,44 @@ public class CustomerView extends JPanel {
                 txtCreditLimit.setText(customerToEdit.getCreditLimit() != null ? customerToEdit.getCreditLimit().toString() : "0.00");
             }
 
+            int row = 0;
+            addFormField(formPanel, gbc, "Customer Code:", txtCode, row++);
+            addFormField(formPanel, gbc, "Company Name *:", txtName, row++);
+            addFormField(formPanel, gbc, "Contact First Name:", txtContactName, row++);
+            addFormField(formPanel, gbc, "Contact Last Name:", txtContactLastName, row++);
+            addFormField(formPanel, gbc, "Phone *:", txtPhone, row++);
+            addFormField(formPanel, gbc, "Fax:", txtFax, row++);
+            addFormField(formPanel, gbc, "Address Line *:", txtAddressLine1, row++);
+            addFormField(formPanel, gbc, "City *:", txtCity, row++);
+            addFormField(formPanel, gbc, "Country *:", txtCountry, row++);
+            addFormCombo(formPanel, gbc, "Sales Rep:", cmbSalesRep, row++);
+            addFormField(formPanel, gbc, "Credit Limit ($):", txtCreditLimit, row++);
+
             add(formPanel, BorderLayout.CENTER);
 
-            // Footer Action Buttons
+            // Botones inferiores de acción
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 14));
             buttonPanel.setBackground(new Color(248, 250, 252));
             buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(226, 232, 240)));
 
             JButton btnCancel = new JButton("Cancel");
-            btnCancel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            btnCancel.setPreferredSize(new Dimension(85, 33));
+            btnCancel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            btnCancel.setPreferredSize(new Dimension(85, 34));
             btnCancel.setBackground(Color.WHITE);
             btnCancel.setForeground(TEXT_PRIMARY);
             btnCancel.setFocusPainted(false);
-            btnCancel.setBorder(BorderFactory.createLineBorder(new Color(203, 213, 225), 1, true));
+            btnCancel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            btnCancel.putClientProperty("JButton.buttonType", "roundRect");
+            btnCancel.setBorder(BorderFactory.createLineBorder(BORDER_SUBTLE, 1, true));
 
             JButton btnSave = new JButton("Save Record");
-            btnSave.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            btnSave.setPreferredSize(new Dimension(110, 33));
-            btnSave.setBackground(NAVY_PRIMARY);
+            btnSave.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            btnSave.setPreferredSize(new Dimension(115, 34));
+            btnSave.setBackground(new Color(24, 38, 57));
             btnSave.setForeground(Color.WHITE);
             btnSave.setFocusPainted(false);
+            btnSave.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            btnSave.putClientProperty("JButton.buttonType", "roundRect");
             btnSave.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
             btnSave.addActionListener(e -> onSave());
@@ -409,6 +521,7 @@ public class CustomerView extends JPanel {
         private JTextField createStyledTextField() {
             JTextField tf = new JTextField(15);
             tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            tf.putClientProperty("Component.arc", 8);
             tf.setMargin(new Insets(4, 8, 4, 8));
             return tf;
         }
@@ -454,27 +567,17 @@ public class CustomerView extends JPanel {
 
         private void onSave() {
             try {
-                String codeStr = txtCode.getText().trim();
                 String name = txtName.getText().trim();
                 String phone = txtPhone.getText().trim();
                 String address = txtAddressLine1.getText().trim();
                 String city = txtCity.getText().trim();
                 String country = txtCountry.getText().trim();
 
-                if (codeStr.isEmpty() || name.isEmpty() || phone.isEmpty() || address.isEmpty() || city.isEmpty() || country.isEmpty()) {
+                // Validación de campos requeridos (sin exigir Code para nuevo registro)
+                if (name.isEmpty() || phone.isEmpty() || address.isEmpty() || city.isEmpty() || country.isEmpty()) {
                     JOptionPane.showMessageDialog(this,
-                            "Please fill in all required fields (Code, Company Name, Phone, Address, City, Country).",
+                            "Please fill in all required fields (Company Name, Phone, Address, City, Country).",
                             "Validation Error", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                int code;
-                try {
-                    code = Integer.parseInt(codeStr);
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this,
-                            "Customer Code must be a valid integer number.",
-                            "Input Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -501,6 +604,9 @@ public class CustomerView extends JPanel {
 
                 BigDecimal creditLimit = UIUtils.parseAmount(txtCreditLimit.getText(), "Credit Limit", true);
 
+                // Si es nuevo registro, el código inicial es 0 (CustomerJdbcAdapter autogenera el código real secuencial)
+                int code = (customerToEdit != null) ? customerToEdit.getCustomerCode() : 0;
+
                 Customer customer = new Customer(
                         code,
                         name,
@@ -518,7 +624,7 @@ public class CustomerView extends JPanel {
                 if (customerToEdit == null) {
                     customerUseCase.save(customer);
                     JOptionPane.showMessageDialog(this,
-                            "Customer saved successfully.",
+                            "Customer #" + customer.getCustomerCode() + " saved successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     customerUseCase.update(customer);
@@ -543,10 +649,10 @@ public class CustomerView extends JPanel {
         }
     }
 
-    private static class RoundedPanel extends JPanel {
+    private static class RoundedCardPanel extends JPanel {
         private final int radius;
 
-        public RoundedPanel(int radius) {
+        public RoundedCardPanel(int radius) {
             this.radius = radius;
             setOpaque(false);
         }
