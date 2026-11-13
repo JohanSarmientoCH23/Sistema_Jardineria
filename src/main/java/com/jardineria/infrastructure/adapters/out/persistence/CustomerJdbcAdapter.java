@@ -16,14 +16,13 @@ public class CustomerJdbcAdapter implements CustomerRepository {
 
     @Override
     public void save(Customer customer) {
-        String sql = "INSERT INTO customer (customer_code, customer_name, contact_name, contact_last_name, " +
-                     "phone, fax, address_line1, city, country, sales_rep_employee_code, credit_limit) " +
+        String sql = "INSERT INTO cliente (codigo_cliente, nombre_cliente, nombre_contacto, apellido_contacto, " +
+                     "telefono, fax, linea_direccion1, ciudad, pais, codigo_empleado_rep_ventas, limite_credito) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo establecer la conexión con MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -52,22 +51,20 @@ public class CustomerJdbcAdapter implements CustomerRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error saving customer: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<Customer> findAll() {
         List<Customer> customers = new ArrayList<>();
-        String sql = "SELECT customer_code, customer_name, contact_name, contact_last_name, " +
-                     "phone, fax, address_line1, city, country, sales_rep_employee_code, credit_limit " +
-                     "FROM customer";
+        String sql = "SELECT codigo_cliente, nombre_cliente, nombre_contacto, apellido_contacto, " +
+                     "telefono, fax, linea_direccion1, ciudad, pais, codigo_empleado_rep_ventas, limite_credito " +
+                     "FROM cliente";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return customers;
+                throw new RuntimeException("Error en base de datos: No se pudo establecer la conexión con MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql);
@@ -78,8 +75,7 @@ public class CustomerJdbcAdapter implements CustomerRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error retrieving customers: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
 
         return customers;
@@ -87,14 +83,13 @@ public class CustomerJdbcAdapter implements CustomerRepository {
 
     @Override
     public Optional<Customer> findById(Integer customerCode) {
-        String sql = "SELECT customer_code, customer_name, contact_name, contact_last_name, " +
-                     "phone, fax, address_line1, city, country, sales_rep_employee_code, credit_limit " +
-                     "FROM customer WHERE customer_code = ?";
+        String sql = "SELECT codigo_cliente, nombre_cliente, nombre_contacto, apellido_contacto, " +
+                     "telefono, fax, linea_direccion1, ciudad, pais, codigo_empleado_rep_ventas, limite_credito " +
+                     "FROM cliente WHERE codigo_cliente = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return Optional.empty();
+                throw new RuntimeException("Error en base de datos: No se pudo establecer la conexión con MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -107,8 +102,7 @@ public class CustomerJdbcAdapter implements CustomerRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding customer by id: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
 
         return Optional.empty();
@@ -116,14 +110,13 @@ public class CustomerJdbcAdapter implements CustomerRepository {
 
     @Override
     public void update(Customer customer) {
-        String sql = "UPDATE customer SET customer_name = ?, contact_name = ?, contact_last_name = ?, " +
-                     "phone = ?, fax = ?, address_line1 = ?, city = ?, country = ?, " +
-                     "sales_rep_employee_code = ?, credit_limit = ? WHERE customer_code = ?";
+        String sql = "UPDATE cliente SET nombre_cliente = ?, nombre_contacto = ?, apellido_contacto = ?, " +
+                     "telefono = ?, fax = ?, linea_direccion1 = ?, ciudad = ?, pais = ?, " +
+                     "codigo_empleado_rep_ventas = ?, limite_credito = ? WHERE codigo_cliente = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo establecer la conexión con MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -153,19 +146,17 @@ public class CustomerJdbcAdapter implements CustomerRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error updating customer: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void deleteById(Integer customerCode) {
-        String sql = "DELETE FROM customer WHERE customer_code = ?";
+        String sql = "DELETE FROM cliente WHERE codigo_cliente = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo establecer la conexión con MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -173,27 +164,26 @@ public class CustomerJdbcAdapter implements CustomerRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting customer by id: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     private Customer mapResultSetToCustomer(ResultSet resultSet) throws SQLException {
-        int salesRep = resultSet.getInt("sales_rep_employee_code");
+        int salesRep = resultSet.getInt("codigo_empleado_rep_ventas");
         Integer salesRepEmployeeCode = resultSet.wasNull() ? null : salesRep;
 
         return new Customer(
-            resultSet.getInt("customer_code"),
-            resultSet.getString("customer_name"),
-            resultSet.getString("contact_name"),
-            resultSet.getString("contact_last_name"),
-            resultSet.getString("phone"),
+            resultSet.getInt("codigo_cliente"),
+            resultSet.getString("nombre_cliente"),
+            resultSet.getString("nombre_contacto"),
+            resultSet.getString("apellido_contacto"),
+            resultSet.getString("telefono"),
             resultSet.getString("fax"),
-            resultSet.getString("address_line1"),
-            resultSet.getString("city"),
-            resultSet.getString("country"),
+            resultSet.getString("linea_direccion1"),
+            resultSet.getString("ciudad"),
+            resultSet.getString("pais"),
             salesRepEmployeeCode,
-            resultSet.getBigDecimal("credit_limit")
+            resultSet.getBigDecimal("limite_credito")
         );
     }
 }

@@ -16,14 +16,13 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
 
     @Override
     public void save(Employee employee) {
-        String sql = "INSERT INTO employee (employee_code, first_name, last_name1, last_name2, " +
-                     "extension, email, office_code, reports_to, job_title) " +
+        String sql = "INSERT INTO empleado (codigo_empleado, nombre, apellido1, apellido2, " +
+                     "extension, email, codigo_oficina, codigo_jefe, puesto) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -46,21 +45,19 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error saving employee: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<Employee> findAll() {
         List<Employee> employees = new ArrayList<>();
-        String sql = "SELECT employee_code, first_name, last_name1, last_name2, " +
-                     "extension, email, office_code, reports_to, job_title FROM employee";
+        String sql = "SELECT codigo_empleado, nombre, apellido1, apellido2, " +
+                     "extension, email, codigo_oficina, codigo_jefe, puesto FROM empleado";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return employees;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql);
@@ -71,8 +68,7 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error retrieving employees: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
 
         return employees;
@@ -80,14 +76,13 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
 
     @Override
     public Optional<Employee> findById(Integer employeeCode) {
-        String sql = "SELECT employee_code, first_name, last_name1, last_name2, " +
-                     "extension, email, office_code, reports_to, job_title " +
-                     "FROM employee WHERE employee_code = ?";
+        String sql = "SELECT codigo_empleado, nombre, apellido1, apellido2, " +
+                     "extension, email, codigo_oficina, codigo_jefe, puesto " +
+                     "FROM empleado WHERE codigo_empleado = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return Optional.empty();
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -100,8 +95,7 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding employee by id: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
 
         return Optional.empty();
@@ -109,14 +103,13 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
 
     @Override
     public void update(Employee employee) {
-        String sql = "UPDATE employee SET first_name = ?, last_name1 = ?, last_name2 = ?, " +
-                     "extension = ?, email = ?, office_code = ?, reports_to = ?, job_title = ? " +
-                     "WHERE employee_code = ?";
+        String sql = "UPDATE empleado SET nombre = ?, apellido1 = ?, apellido2 = ?, " +
+                     "extension = ?, email = ?, codigo_oficina = ?, codigo_jefe = ?, puesto = ? " +
+                     "WHERE codigo_empleado = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -139,19 +132,17 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error updating employee: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void deleteById(Integer employeeCode) {
-        String sql = "DELETE FROM employee WHERE employee_code = ?";
+        String sql = "DELETE FROM empleado WHERE codigo_empleado = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -159,25 +150,24 @@ public class EmployeeJdbcAdapter implements EmployeeRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting employee by id: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     private Employee mapResultSetToEmployee(ResultSet resultSet) throws SQLException {
-        int rep = resultSet.getInt("reports_to");
+        int rep = resultSet.getInt("codigo_jefe");
         Integer reportsTo = resultSet.wasNull() ? null : rep;
 
         return new Employee(
-            resultSet.getInt("employee_code"),
-            resultSet.getString("first_name"),
-            resultSet.getString("last_name1"),
-            resultSet.getString("last_name2"),
+            resultSet.getInt("codigo_empleado"),
+            resultSet.getString("nombre"),
+            resultSet.getString("apellido1"),
+            resultSet.getString("apellido2"),
             resultSet.getString("extension"),
             resultSet.getString("email"),
-            resultSet.getString("office_code"),
+            resultSet.getString("codigo_oficina"),
             reportsTo,
-            resultSet.getString("job_title")
+            resultSet.getString("puesto")
         );
     }
 }

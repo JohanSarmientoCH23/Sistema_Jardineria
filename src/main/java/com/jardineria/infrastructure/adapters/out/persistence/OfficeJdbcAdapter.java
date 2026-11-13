@@ -15,13 +15,12 @@ public class OfficeJdbcAdapter implements OfficeRepository {
 
     @Override
     public void save(Office office) {
-        String sql = "INSERT INTO office (office_code, city, country, region, postal_code, phone, address_line1, address_line2) " +
+        String sql = "INSERT INTO oficina (codigo_oficina, ciudad, pais, region, codigo_postal, telefono, linea_direccion1, linea_direccion2) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -37,20 +36,18 @@ public class OfficeJdbcAdapter implements OfficeRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error saving office: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<Office> findAll() {
         List<Office> offices = new ArrayList<>();
-        String sql = "SELECT office_code, city, country, region, postal_code, phone, address_line1, address_line2 FROM office";
+        String sql = "SELECT codigo_oficina, ciudad, pais, region, codigo_postal, telefono, linea_direccion1, linea_direccion2 FROM oficina";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return offices;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql);
@@ -61,8 +58,7 @@ public class OfficeJdbcAdapter implements OfficeRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error retrieving offices: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
 
         return offices;
@@ -70,13 +66,12 @@ public class OfficeJdbcAdapter implements OfficeRepository {
 
     @Override
     public Optional<Office> findById(String officeCode) {
-        String sql = "SELECT office_code, city, country, region, postal_code, phone, address_line1, address_line2 " +
-                     "FROM office WHERE office_code = ?";
+        String sql = "SELECT codigo_oficina, ciudad, pais, region, codigo_postal, telefono, linea_direccion1, linea_direccion2 " +
+                     "FROM oficina WHERE codigo_oficina = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return Optional.empty();
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -89,8 +84,7 @@ public class OfficeJdbcAdapter implements OfficeRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding office by id: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
 
         return Optional.empty();
@@ -98,13 +92,12 @@ public class OfficeJdbcAdapter implements OfficeRepository {
 
     @Override
     public void update(Office office) {
-        String sql = "UPDATE office SET city = ?, country = ?, region = ?, postal_code = ?, phone = ?, " +
-                     "address_line1 = ?, address_line2 = ? WHERE office_code = ?";
+        String sql = "UPDATE oficina SET ciudad = ?, pais = ?, region = ?, codigo_postal = ?, telefono = ?, " +
+                     "linea_direccion1 = ?, linea_direccion2 = ? WHERE codigo_oficina = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -120,19 +113,17 @@ public class OfficeJdbcAdapter implements OfficeRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error updating office: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void deleteById(String officeCode) {
-        String sql = "DELETE FROM office WHERE office_code = ?";
+        String sql = "DELETE FROM oficina WHERE codigo_oficina = ?";
 
         try (Connection connection = ConexionMySQL.conectar()) {
             if (connection == null) {
-                System.err.println("Could not establish connection to MySQL database.");
-                return;
+                throw new RuntimeException("Error en base de datos: No se pudo conectar a MySQL.");
             }
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -140,21 +131,20 @@ public class OfficeJdbcAdapter implements OfficeRepository {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting office by id: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
         }
     }
 
     private Office mapResultSetToOffice(ResultSet resultSet) throws SQLException {
         return new Office(
-            resultSet.getString("office_code"),
-            resultSet.getString("city"),
-            resultSet.getString("country"),
+            resultSet.getString("codigo_oficina"),
+            resultSet.getString("ciudad"),
+            resultSet.getString("pais"),
             resultSet.getString("region"),
-            resultSet.getString("postal_code"),
-            resultSet.getString("phone"),
-            resultSet.getString("address_line1"),
-            resultSet.getString("address_line2")
+            resultSet.getString("codigo_postal"),
+            resultSet.getString("telefono"),
+            resultSet.getString("linea_direccion1"),
+            resultSet.getString("linea_direccion2")
         );
     }
 }
