@@ -2,6 +2,7 @@ package com.jardineria.infrastructure.adapters.in.ui;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import com.jardineria.infrastructure.adapters.in.ui.dashboard.DashboardPanel;
+import com.jardineria.infrastructure.adapters.in.ui.views.CustomerView;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -53,7 +54,7 @@ public class MainFrame extends JFrame {
 
         // Add views to CardLayout
         contentPanel.add(new DashboardPanel(), CARD_DASHBOARD);
-        contentPanel.add(createPlaceholderView("Customers Management"), CARD_CUSTOMERS);
+        contentPanel.add(new CustomerView(), CARD_CUSTOMERS);
         contentPanel.add(createPlaceholderView("Employees Management"), CARD_EMPLOYEES);
         contentPanel.add(createPlaceholderView("Products Catalog"), CARD_PRODUCTS);
         contentPanel.add(createPlaceholderView("Orders Processing"), CARD_ORDERS);
