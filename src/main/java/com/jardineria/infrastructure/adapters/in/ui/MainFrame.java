@@ -49,9 +49,9 @@ public class MainFrame extends JFrame {
     private static final String CARD_ORDER_DETAILS = "ORDER_DETAILS";
 
     // Corporate Palette
-    private static final Color SIDEBAR_BG = new Color(24, 38, 57);
-    private static final Color SIDEBAR_HOVER = new Color(34, 52, 77);
-    private static final Color SIDEBAR_ACTIVE = new Color(41, 62, 92);
+    private static final Color SIDEBAR_BG = new Color(39, 80, 10); // #27500A Verde Vivo
+    private static final Color SIDEBAR_HOVER = new Color(48, 98, 13);
+    private static final Color SIDEBAR_ACTIVE = new Color(59, 109, 17); // #3B6D11 Activo
     private static final Color ACCENT_GREEN = new Color(76, 175, 80);
     private static final Color TEXT_MUTED = new Color(148, 163, 184);
     private static final Color TEXT_LIGHT = new Color(241, 245, 249);
@@ -66,7 +66,7 @@ public class MainFrame extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Jardinería Enterprise System - Hexagonal Architecture");
+        setTitle("Verde Vivo — Sistema de Gestión");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1280, 820);
         setMinimumSize(new Dimension(1080, 700));
@@ -103,7 +103,7 @@ public class MainFrame extends JFrame {
         JPanel sidebar = new JPanel(new BorderLayout());
         sidebar.setPreferredSize(new Dimension(245, getHeight()));
         sidebar.setBackground(SIDEBAR_BG);
-        sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(15, 23, 42)));
+        sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(30, 62, 8)));
 
         // 1. Logo & Brand Header
         JPanel brandPanel = new JPanel(new BorderLayout(12, 0));
@@ -117,7 +117,7 @@ public class MainFrame extends JFrame {
         brandTextPanel.setLayout(new BoxLayout(brandTextPanel, BoxLayout.Y_AXIS));
         brandTextPanel.setOpaque(false);
 
-        JLabel brandTitle = new JLabel("Jardineria App");
+        JLabel brandTitle = new JLabel("Verde Vivo");
         brandTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
         brandTitle.setForeground(TEXT_LIGHT);
 
@@ -186,7 +186,7 @@ public class MainFrame extends JFrame {
         JPanel footerPanel = new JPanel(new BorderLayout(12, 0));
         footerPanel.setOpaque(false);
         footerPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(34, 52, 77)),
+                BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(35, 72, 9)),
                 BorderFactory.createEmptyBorder(16, 18, 18, 18)
         ));
 

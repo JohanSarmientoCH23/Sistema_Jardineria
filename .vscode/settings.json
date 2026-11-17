@@ -1,5 +1,6 @@
 {
     "conventionalCommits.scopes": [
         "Refactor application and infrastructure layers: updated service ports, use cases, domain models, and UI"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
