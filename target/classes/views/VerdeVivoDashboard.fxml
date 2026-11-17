@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane prefHeight="850.0" prefWidth="1320.0" styleClass="main-canvas"
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.jardineria.infrastructure.adapters.in.ui.controllers.VerdeVivoDashboardController">
+
+    <!-- LEFT: Barra Lateral Orgánica (#27500A) -->
+    <left>
+        <VBox prefWidth="230.0" styleClass="sidebar" BorderPane.alignment="CENTER">
+            <children>
+                <!-- Logotipo / Marca Verde Vivo -->
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <FontIcon iconLiteral="fth-square" iconSize="20" styleClass="brand-icon" />
+                        <Label styleClass="brand-title" text="Verde Vivo" />
+                    </children>
+                    <padding>
+                        <Insets bottom="30.0" left="22.0" right="20.0" top="24.0" />
+                    </padding>
+                </HBox>
+
+                <!-- Menú de Navegación -->
+                <VBox spacing="6.0" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Button fx:id="btnDashboard" maxWidth="1.7976931348623157E308" styleClass="nav-item, nav-item-active" text="Dashboard">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-grid" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="btnPlantas" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Plantas">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-sun" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="btnInventario" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Inventario">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-box" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="btnVentas" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Ventas">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-shopping-cart" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="btnClientes" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Clientes">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-users" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="btnProveedores" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Proveedores">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-truck" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="btnReportes" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Reportes">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-bar-chart-2" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                        </Button>
+
+                        <Region VBox.vgrow="ALWAYS" />
+
+                        <Button fx:id="btnAjustes" maxWidth="1.7976931348623157E308" styleClass="nav-item" text="Ajustes">
+                            <graphic>
+                                <FontIcon iconLiteral="fth-settings" iconSize="16" styleClass="nav-icon" />
+                            </graphic>
+                            <VBox.margin>
+                                <Insets bottom="20.0" />
+                            </VBox.margin>
+                        </Button>
+                    </children>
+                    <padding>
+                        <Insets left="14.0" right="14.0" />
+                    </padding>
+                </VBox>
+            </children>
+        </VBox>
+    </left>
+
+    <!-- CENTER: Contenido Principal Scrolleable (#F5F6F8) -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll" vbarPolicy="AS_NEEDED">
+            <content>
+                <VBox spacing="20.0">
+                    <padding>
+                        <Insets bottom="30.0" left="32.0" right="32.0" top="24.0" />
+                    </padding>
+                    <children>
+
+                        <!-- Barra Superior -->
+                        <HBox alignment="CENTER_LEFT" spacing="15.0">
+                            <children>
+                                <VBox spacing="2.0">
+                                    <children>
+                                        <Label styleClass="header-title" text="Resumen del día" />
+                                        <Label fx:id="lblCurrentDate" styleClass="header-date" text="Lunes, 16 de noviembre" />
+                                    </children>
+                                </VBox>
+
+                                <Region HBox.hgrow="ALWAYS" />
+
+                                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="search-box">
+                                    <children>
+                                        <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon" />
+                                        <TextField fx:id="txtSearch" promptText="Buscar planta o cliente" styleClass="search-input" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="6.0" left="12.0" right="14.0" top="6.0" />
+                                    </padding>
+                                </HBox>
+
+                                <Button fx:id="btnNewSale" onAction="#handleNewSale" styleClass="btn-primary" text="Nueva venta" />
+                            </children>
+                        </HBox>
+
+                        <!-- BLOQUE 1: Tarjetas de Métricas (KPIs) -->
+                        <HBox spacing="18.0">
+                            <children>
+                                <VBox styleClass="dashboard-card, kpi-card" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="kpi-subtitle" text="Ventas de hoy" />
+                                        <Label styleClass="kpi-value" text="\$1.240.000" />
+                                        <Label styleClass="kpi-trend-positive" text="+12% vs ayer" />
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="dashboard-card, kpi-card" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="kpi-subtitle" text="Pedidos" />
+                                        <Label styleClass="kpi-value" text="38" />
+                                        <Label styleClass="kpi-trend-positive" text="+5 nuevos" />
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="dashboard-card, kpi-card" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="kpi-subtitle" text="Plantas en stock" />
+                                        <Label styleClass="kpi-value" text="1.862" />
+                                        <Label styleClass="kpi-trend-neutral" text="96 especies" />
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="dashboard-card, kpi-alert-card" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="kpi-alert-subtitle" text="Stock bajo" />
+                                        <Label styleClass="kpi-alert-value" text="14" />
+                                        <Label styleClass="kpi-alert-desc" text="Requieren pedido" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- BLOQUE 2: Gráfico de Ventas + Tabla de Stock Bajo -->
+                        <HBox spacing="18.0">
+                            <children>
+                                <VBox styleClass="dashboard-card" HBox.hgrow="ALWAYS">
+                                    <padding>
+                                        <Insets bottom="16.0" left="20.0" right="20.0" top="18.0" />
+                                    </padding>
+                                    <children>
+                                        <Label styleClass="card-section-title" text="Ventas de la semana" />
+                                        <BarChart fx:id="salesBarChart" animated="false" legendVisible="false" prefHeight="230.0" styleClass="verde-chart">
+                                            <xAxis>
+                                                <CategoryAxis side="BOTTOM" fx:id="xAxis" />
+                                            </xAxis>
+                                            <yAxis>
+                                                <NumberAxis fx:id="yAxis" side="LEFT" tickLabelsVisible="false" tickMarkVisible="false" opacity="0" />
+                                            </yAxis>
+                                        </BarChart>
+                                    </children>
+                                </VBox>
+
+                                <VBox prefWidth="380.0" styleClass="dashboard-card">
+                                    <padding>
+                                        <Insets bottom="16.0" left="20.0" right="20.0" top="18.0" />
+                                    </padding>
+                                    <children>
+                                        <Label styleClass="card-section-title" text="Stock bajo" />
+                                        <TableView fx:id="lowStockTable" prefHeight="230.0" styleClass="clean-table, compact-table">
+                                            <columns>
+                                                <TableColumn fx:id="colLowStockProduct" prefWidth="240.0" text="Producto" />
+                                                <TableColumn fx:id="colLowStockUnits" prefWidth="100.0" style="-fx-alignment: CENTER_RIGHT;" text="Cantidad" />
+                                            </columns>
+                                            <columnResizePolicy>
+                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                            </columnResizePolicy>
+                                        </TableView>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- BLOQUE 3: Pedidos Recientes -->
+                        <VBox styleClass="dashboard-card">
+                            <padding>
+                                <Insets bottom="18.0" left="20.0" right="20.0" top="18.0" />
+                            </padding>
+                            <children>
+                                <Label styleClass="card-section-title" text="Pedidos recientes" />
+                                <TableView fx:id="recentOrdersTable" prefHeight="170.0" styleClass="clean-table">
+                                    <columns>
+                                        <TableColumn fx:id="colOrderCustomer" prefWidth="260.0" text="Cliente" />
+                                        <TableColumn fx:id="colOrderProduct" prefWidth="320.0" text="Producto" />
+                                        <TableColumn fx:id="colOrderTotal" prefWidth="180.0" text="Total" />
+                                        <TableColumn fx:id="colOrderStatus" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT;" text="Estado" />
+                                    </columns>
+                                    <columnResizePolicy>
+                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                    </columnResizePolicy>
+                                </TableView>
+                            </children>
+                        </VBox>
+
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

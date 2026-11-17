@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox spacing="18.0" styleClass="module-container"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jardineria.infrastructure.adapters.in.ui.controllers.EmployeeViewController">
+
+    <padding>
+        <Insets bottom="24.0" left="28.0" right="28.0" top="24.0" />
+    </padding>
+
+    <children>
+        <!-- 1. Cabecera del Módulo (Título, Subtítulo y Botón Principal) -->
+        <HBox alignment="CENTER_LEFT" spacing="12.0">
+            <children>
+                <VBox spacing="2.0">
+                    <children>
+                        <Label styleClass="module-title" text="Employees" />
+                        <Label styleClass="module-subtitle" text="Gestiona el equipo de todas las oficinas" />
+                    </children>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS" />
+
+                <!-- Botón Principal Destacado (Verde #3B6D11) -->
+                <Button fx:id="btnAddEmployee" onAction="#handleCreateEmployee" styleClass="btn-primary" text="Add employee">
+                    <graphic>
+                        <FontIcon iconLiteral="fth-plus" iconSize="15" styleClass="btn-icon" />
+                    </graphic>
+                </Button>
+            </children>
+        </HBox>
+
+        <!-- 2. Tarjetas de Resumen (3 KPIs Superiores) -->
+        <HBox spacing="16.0">
+            <children>
+                <!-- KPI 1: Total Empleados -->
+                <HBox alignment="CENTER_LEFT" spacing="14.0" styleClass="summary-kpi-card" HBox.hgrow="ALWAYS">
+                    <children>
+                        <VBox alignment="CENTER" styleClass="kpi-icon-box">
+                            <FontIcon iconLiteral="fth-users" iconSize="18" styleClass="kpi-icon-green" />
+                        </VBox>
+                        <VBox spacing="2.0">
+                            <Label styleClass="summary-kpi-label" text="Total empleados" />
+                            <Label fx:id="lblTotalEmployees" styleClass="summary-kpi-value" text="24" />
+                        </VBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="14.0" left="16.0" right="16.0" top="14.0" />
+                    </padding>
+                </HBox>
+
+                <!-- KPI 2: Oficinas -->
+                <HBox alignment="CENTER_LEFT" spacing="14.0" styleClass="summary-kpi-card" HBox.hgrow="ALWAYS">
+                    <children>
+                        <VBox alignment="CENTER" styleClass="kpi-icon-box">
+                            <FontIcon iconLiteral="fth-map-pin" iconSize="18" styleClass="kpi-icon-blue" />
+                        </VBox>
+                        <VBox spacing="2.0">
+                            <Label styleClass="summary-kpi-label" text="Oficinas" />
+                            <Label fx:id="lblTotalOffices" styleClass="summary-kpi-value" text="8" />
+                        </VBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="14.0" left="16.0" right="16.0" top="14.0" />
+                    </padding>
+                </HBox>
+
+                <!-- KPI 3: Representantes -->
+                <HBox alignment="CENTER_LEFT" spacing="14.0" styleClass="summary-kpi-card" HBox.hgrow="ALWAYS">
+                    <children>
+                        <VBox alignment="CENTER" styleClass="kpi-icon-box">
+                            <FontIcon iconLiteral="fth-briefcase" iconSize="18" styleClass="kpi-icon-amber" />
+                        </VBox>
+                        <VBox spacing="2.0">
+                            <Label styleClass="summary-kpi-label" text="Representantes" />
+                            <Label fx:id="lblTotalSalesReps" styleClass="summary-kpi-value" text="15" />
+                        </VBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="14.0" left="16.0" right="16.0" top="14.0" />
+                    </padding>
+                </HBox>
+            </children>
+        </HBox>
+
+        <!-- 3. Barra de Búsqueda y Filtros Rápidos -->
+        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="filters-row">
+            <children>
+                <!-- Buscador por nombre o email -->
+                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="search-box" HBox.hgrow="ALWAYS">
+                    <children>
+                        <FontIcon iconLiteral="fth-search" iconSize="14" styleClass="search-icon" />
+                        <TextField fx:id="txtSearch" promptText="Buscar por nombre o email" styleClass="search-input" HBox.hgrow="ALWAYS" />
+                    </children>
+                    <padding>
+                        <Insets bottom="6.0" left="12.0" right="12.0" top="6.0" />
+                    </padding>
+                </HBox>
+
+                <!-- Filtro Oficina -->
+                <ComboBox fx:id="cmbOfficeFilter" prefWidth="170.0" promptText="Oficina: Todas" styleClass="filter-combo" />
+
+                <!-- Filtro Cargo -->
+                <ComboBox fx:id="cmbJobFilter" prefWidth="180.0" promptText="Cargo: Todos" styleClass="filter-combo" />
+
+                <!-- Botón Refrescar / Recargar -->
+                <Button fx:id="btnRefresh" onAction="#handleRefresh" styleClass="btn-icon-square" text="">
+                    <graphic>
+                        <FontIcon iconLiteral="fth-refresh-cw" iconSize="14" styleClass="action-icon" />
+                    </graphic>
+                </Button>
+            </children>
+        </HBox>
+
+        <!-- 4. Tabla de Empleados Estilizada -->
+        <VBox styleClass="table-card" VBox.vgrow="ALWAYS">
+            <children>
+                <TableView fx:id="employeeTable" styleClass="verde-table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colEmployee" prefWidth="320.0" text="Empleado" />
+                        <TableColumn fx:id="colJobTitle" prefWidth="240.0" text="Cargo" />
+                        <TableColumn fx:id="colOffice" prefWidth="130.0" style="-fx-alignment: CENTER;" text="Oficina" />
+                        <TableColumn fx:id="colStatus" prefWidth="130.0" style="-fx-alignment: CENTER;" text="Estado" />
+                        <TableColumn fx:id="colActions" prefWidth="120.0" style="-fx-alignment: CENTER;" text="Acciones" />
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
+                </TableView>
+
+                <!-- 5. Pie de Página con Paginación -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="pagination-footer">
+                    <children>
+                        <Label fx:id="lblPaginationInfo" styleClass="pagination-info" text="Mostrando 1-4 de 24" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <HBox alignment="CENTER" spacing="6.0">
+                            <children>
+                                <Button fx:id="btnPrevPage" onAction="#handlePrevPage" styleClass="page-nav-btn" text="">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fth-chevron-left" iconSize="13" />
+                                    </graphic>
+                                </Button>
+                                <Button styleClass="page-btn, page-btn-active" text="1" />
+                                <Button styleClass="page-btn" text="2" />
+                                <Button styleClass="page-btn" text="3" />
+                                <Button fx:id="btnNextPage" onAction="#handleNextPage" styleClass="page-nav-btn" text="">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fth-chevron-right" iconSize="13" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="12.0" left="16.0" right="16.0" top="12.0" />
+                    </padding>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</VBox>

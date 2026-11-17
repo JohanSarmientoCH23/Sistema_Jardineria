@@ -4,25 +4,22 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-
 public class ConexionMySQL {
-    private static final String URL = "jdbc:mysql://localhost:3307/jardineria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    // Conexión configurada con UTF-8 explícito para preservar tildes, eñes y caracteres especiales
+    private static final String URL = "jdbc:mysql://localhost:3307/jardineria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8";
     private static final String USER = "root";
     private static final String PASSWORD = "root2026"; 
 
     public static Connection conectar() {
         Connection conexion = null;
         try {
-            // Cargar el driver de MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
-            // Establecer conexión
             conexion = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("✅ Conexión establecida");
         } catch (ClassNotFoundException e) {
-            System.out.println("⚠️ Error: No se encontró el driver JDBC");
+            System.err.println("Error: No se encontró el driver JDBC de MySQL");
             e.printStackTrace();
         } catch (SQLException e) {
-            System.out.println("⚠️ Error al conectar con MySQL");
+            System.err.println("Error al conectar con MySQL");
             e.printStackTrace();
         }
         return conexion;
